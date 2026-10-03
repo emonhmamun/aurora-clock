@@ -1,0 +1,47 @@
+name: 🎨 New clock face
+description: Propose or contribute a new clock face
+labels: ["enhancement", "faces", "good first issue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        New faces are the most welcome contribution. A face is a single
+        function — see
+        [CONTRIBUTING.md](https://github.com/emonhmamun/aurora-clock/blob/main/CONTRIBUTING.md#writing-a-new-clock-face).
+
+  - type: input
+    id: name
+    attributes:
+      label: Face name
+      placeholder: "Arc gauge"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What does it look like?
+      description: Describe it, or attach a sketch, mockup or reference image.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: shape
+    attributes:
+      label: Best window shape
+      options:
+        - Wide (e.g. 640 x 280)
+        - Square
+        - Tall and narrow
+        - Very wide and short (a strip)
+        - Any
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contrib
+    attributes:
+      label: Contribution
+      options:
+        - label: I intend to implement this myself
+        - label: I have checked it is not already one of the 20 existing faces

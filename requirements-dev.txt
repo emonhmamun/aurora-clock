@@ -1,0 +1,15 @@
+# Development and CI dependencies.
+#
+#   pip install -r requirements-dev.txt
+#   pytest -q
+#   ruff check .
+-r requirements.txt
+
+pytest>=8.0
+ruff>=0.6
+pyflakes>=3.2
+
+# Build toolchain (Windows only). Versions are pinned to match the ones the
+# published releases are built with - see docs/BUILDING.md.
+PySide6-Essentials==6.8.1.1 ; sys_platform == "win32"
+pyinstaller==6.11.1 ; sys_platform == "win32"

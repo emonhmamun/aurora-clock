@@ -1,0 +1,10 @@
+# Runtime dependencies for Aurora Clock.
+#
+#   pip install -r requirements.txt
+#   python main.py
+#
+# PySide6 is LGPL-3.0; see THIRD_PARTY_LICENSES.md.
+PySide6>=6.5
+
+# Windows has no system IANA time zone database, so zoneinfo needs this.
+tzdata; sys_platform == "win32"

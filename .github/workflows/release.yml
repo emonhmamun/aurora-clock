@@ -1,0 +1,154 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build, without the leading v (e.g. 1.5.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build the Windows release
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Work out the version
+        id: ver
+        shell: pwsh
+        run: |
+          if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            $v = '${{ github.event.inputs.version }}'
+          } else {
+            $v = '${{ github.ref_name }}' -replace '^v', ''
+          }
+          "version=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "Building Aurora Clock $v"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install PySide6-Essentials==6.8.1.1 pyinstaller==6.11.1 tzdata pytest
+
+      # ---- quality gate: a failing test must block the release ----------
+      - name: Run the test suite
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: pytest -q --tb=short
+
+      - name: Check the version strings agree
+        shell: pwsh
+        run: |
+          $v = '${{ steps.ver.outputs.version }}'
+          $cfg = Select-String -Path aurora/config.py -Pattern "APP_VERSION\s*=\s*`"$v`""
+          if (-not $cfg) { Write-Error "aurora/config.py is not at $v"; exit 1 }
+          $iss = Select-String -Path build_assets/AuroraClock.iss -Pattern "`"$v`""
+          if (-not $iss) { Write-Error "AuroraClock.iss is not at $v"; exit 1 }
+          Write-Host "Version strings agree on $v"
+
+      # ---- build --------------------------------------------------------
+      - name: Build with PyInstaller
+        working-directory: build_assets
+        run: pyinstaller --noconfirm --clean AuroraClock.spec
+
+      - name: Trim the bundle
+        working-directory: build_assets
+        run: python trim.py
+
+      - name: Verify the trimmed executable starts
+        working-directory: build_assets/dist/AuroraClock
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath .\AuroraClock.exe `
+                             -ArgumentList '--settings' -PassThru
+          Start-Sleep -Seconds 25
+          if ($p.HasExited) {
+            Write-Error "AuroraClock.exe exited with code $($p.ExitCode)"
+            exit 1
+          }
+          Stop-Process -Id $p.Id -Force
+
+      - name: Install Inno Setup
+        run: choco install innosetup --version=6.2.2 -y --no-progress
+
+      - name: Compile the installer
+        working-directory: build_assets
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" AuroraClock.iss
+
+      - name: Build the portable zip
+        shell: pwsh
+        run: |
+          $v = '${{ steps.ver.outputs.version }}'
+          $staging = "staging/Aurora Clock $v"
+          New-Item -ItemType Directory -Force -Path $staging | Out-Null
+          Copy-Item -Recurse build_assets/dist/AuroraClock/* $staging
+          Copy-Item PORTABLE.txt $staging -ErrorAction SilentlyContinue
+          Compress-Archive -Path "staging/*" `
+                           -DestinationPath "AuroraClock-$v-Portable.zip" -Force
+
+      - name: Collect the artifacts and checksums
+        shell: pwsh
+        run: |
+          $v = '${{ steps.ver.outputs.version }}'
+          Copy-Item "build_assets/AuroraClock-Setup-$v.exe" .
+          Get-FileHash "AuroraClock-Setup-$v.exe","AuroraClock-$v-Portable.zip" `
+                       -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } |
+            Set-Content checksums.txt -Encoding utf8
+          Get-Content checksums.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aurora-clock-${{ steps.ver.outputs.version }}
+          path: |
+            AuroraClock-Setup-*.exe
+            AuroraClock-*-Portable.zip
+            checksums.txt
+          retention-days: 30
+
+      # ---- publish ------------------------------------------------------
+      - name: Create a draft GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: Aurora Clock ${{ steps.ver.outputs.version }}
+          body: |
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+            for the full list of changes in this release.
+
+            ## Downloads
+
+            | File | Description |
+            |---|---|
+            | `AuroraClock-Setup-${{ steps.ver.outputs.version }}.exe` | Installer — no administrator rights required |
+            | `AuroraClock-${{ steps.ver.outputs.version }}-Portable.zip` | Portable — unzip and run |
+            | `checksums.txt` | SHA-256 checksums |
+
+            ## Verify your download
+
+            ```powershell
+            Get-FileHash .\AuroraClock-Setup-${{ steps.ver.outputs.version }}.exe -Algorithm SHA256
+            ```
+
+            The binaries are **not code-signed**, so Windows SmartScreen will
+            warn you — click *More info → Run anyway*, or
+            [build it yourself](https://github.com/${{ github.repository }}/blob/main/docs/BUILDING.md).
+          files: |
+            AuroraClock-Setup-*.exe
+            AuroraClock-*-Portable.zip
+            checksums.txt

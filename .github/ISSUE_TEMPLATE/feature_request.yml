@@ -1,0 +1,56 @@
+name: ✨ Feature request
+description: Suggest an improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Aurora Clock has one guiding rule: **it must stay light, and it must
+        never get in the user's way.** Suggestions that keep it that way are
+        very likely to be accepted.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation, not just the solution you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would you like to happen?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the app?
+      options:
+        - A new clock face
+        - A new theme or colour option
+        - Trading sessions / markets
+        - Placement, locking or screen layers
+        - Settings window
+        - Time zones or time sync
+        - Alerts and alarms
+        - Performance
+        - Packaging, installer or autostart
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Would you like to implement it?
+      options:
+        - label: I would be willing to open a pull request

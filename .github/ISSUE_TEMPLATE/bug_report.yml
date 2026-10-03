@@ -1,0 +1,95 @@
+name: 🐛 Bug report
+description: Something does not work the way it should
+labels: ["bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Most of the fixes in 1.4 and
+        1.5 came from user reports like this one.
+
+        Before you start, [Troubleshooting](https://github.com/emonhmamun/aurora-clock/blob/main/docs/TROUBLESHOOTING.md)
+        covers the most common problems.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before reporting
+      options:
+        - label: I am using the latest release
+          required: true
+        - label: I searched the existing issues
+          required: true
+        - label: This is not a security vulnerability (those go through private reporting)
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Aurora Clock version
+      description: Settings → Application tab
+      placeholder: "1.5.0"
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: Press Win+R and run `winver`
+      placeholder: "Windows 11 23H2 (build 22631.4169)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install it?
+      options:
+        - Installer (.exe)
+        - Portable zip
+        - From source
+        - Built it myself
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Settings → ...
+        2. Click ...
+        3. The clock ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: Drag an image in here. Essential for anything visual.
+
+  - type: textarea
+    id: settings
+    attributes:
+      label: Your settings.json
+      description: >
+        From `%APPDATA%\AuroraClock`. Please remove any personal labels first.
+      render: json
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: >
+        Multiple monitors? Display scaling? A live-wallpaper app? A custom
+        shell? Those all interact with the overlay.

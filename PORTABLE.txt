@@ -1,0 +1,55 @@
+Aurora Clock 1.5.0 — Portable edition
+=====================================
+
+No installation needed. Unzip anywhere (e.g. a USB stick) and run AuroraClock.exe.
+
+Files
+-----
+  AuroraClock.exe   : the program
+  _internal\        : required runtime files (do not delete or move)
+
+Command line
+------------
+  AuroraClock.exe              normal start
+  AuroraClock.exe --tray       start minimised to the system tray
+  AuroraClock.exe --settings   open the settings window
+  AuroraClock.exe --reset      reset settings (old file kept as settings.json.backup)
+
+Settings location
+-----------------
+  %APPDATA%\AuroraClock\settings.json
+
+Autostart with Windows (portable edition)
+-----------------------------------------
+  Press Win+R, type:  shell:startup
+  Create a shortcut there to AuroraClock.exe with the argument  --tray
+
+Placing and locking the clock
+-----------------------------
+  1. Right-click the tray icon -> Edit mode ON
+  2. Drag the clock where you want it (or Settings -> Behaviour -> snap grid / exact X-Y)
+  3. Set the size with the presets or the scale slider (15-500%)
+  4. Right-click the tray icon -> Edit mode OFF
+  5. Optional: Settings -> tick "Lock" for that clock, so it can never move
+
+Screen layer
+------------
+  Tray -> Screen layer -> Always on top / Normal / Background / On the wallpaper
+  Default is "On the wallpaper": the clock stays behind Chrome and other windows.
+
+Making the settings window comfortable
+--------------------------------------
+  The settings window can be minimised, maximised, resized and snapped like
+  any other program. Every tab scrolls, so no option is ever cut off.
+  "Hide preview" gives the options the whole window.
+  A mouse wheel over a drop-down scrolls the page instead of changing the value.
+  The window remembers its size, position and last tab.
+
+Removing a duplicate clock
+--------------------------
+  Tray -> Clocks -> pick a clock -> "Flash it" to identify it -> "Delete this clock"
+  or Tray -> Clocks -> "Keep only the first clock".
+
+Uninstall (portable)
+--------------------
+  Just delete the folder, and the %APPDATA%\AuroraClock folder if you wish.

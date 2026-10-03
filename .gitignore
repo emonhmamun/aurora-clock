@@ -1,0 +1,54 @@
+# ---- Python -----------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# ---- Packaging / build ------------------------------------------------
+build/
+dist/
+*.egg-info/
+.eggs/
+build_assets/build/
+build_assets/dist/
+build_assets/*.exe
+build_assets/Output/
+*.spec.bak
+
+# ---- Release artifacts (attached to GitHub Releases, not committed) ---
+AuroraClock-Setup-*.exe
+AuroraClock-*-Portable.zip
+checksums.txt
+
+# ---- Tests / tooling --------------------------------------------------
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+
+# ---- Editors / OS -----------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Local runtime data -----------------------------------------------
+settings.json
+settings.json.bak
+settings.json.backup
+*.log
+.build/
+wine/

@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11']
+        include:
+          - os: ubuntu-latest
+            python: '3.12'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+
+      - name: Install Qt runtime libraries (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            libxkbcommon0 libegl1 libgl1 libfontconfig1 \
+            libdbus-1-3 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 \
+            libxcb-shape0 libxcb-xinerama0
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install PySide6 tzdata pytest ruff pyflakes
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Lint (pyflakes)
+        run: python -m pyflakes main.py aurora/*.py build_assets/*.py
+
+      - name: Run the test suite
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: pytest -q --tb=short
+
+  security:
+    name: Security guarantees
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install pytest
+
+      - name: Enforce the static security contract
+        # These tests use only the standard library, so they need no Qt.
+        run: pytest tests/test_security.py -q --tb=short
+
+  build-check:
+    name: Smoke-build the executable (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install the build toolchain
+        run: |
+          python -m pip install --upgrade pip
+          pip install PySide6-Essentials==6.8.1.1 pyinstaller==6.11.1 tzdata
+
+      - name: Build with PyInstaller
+        working-directory: build_assets
+        run: pyinstaller --noconfirm --clean AuroraClock.spec
+
+      - name: Trim the bundle
+        working-directory: build_assets
+        run: python trim.py
+
+      - name: Verify the trimmed executable actually starts
+        working-directory: build_assets/dist/AuroraClock
+        shell: pwsh
+        run: |
+          # The excludes in the spec are aggressive. If a lazily imported
+          # stdlib module was trimmed, the app dies on start-up - catch that
+          # here rather than in a release.
+          $p = Start-Process -FilePath .\AuroraClock.exe `
+                             -ArgumentList '--settings' -PassThru
+          Start-Sleep -Seconds 25
+          if ($p.HasExited) {
+            Write-Error "AuroraClock.exe exited with code $($p.ExitCode)"
+            exit 1
+          }
+          Stop-Process -Id $p.Id -Force
+          Write-Host "The executable started and stayed running."
